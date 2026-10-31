@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f2f4ed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="念经积累">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <title>念经积累 · 离线版</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f2f4ed;
+      --ink: #20372d;
+      --muted: #78847b;
+      --green: #2e6d55;
+      --green-dark: #204d3d;
+      --line: #dce4da;
+      --rust: #a85f3c;
+      --surface: rgba(255, 255, 255, .86);
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background-color: var(--paper);
+      background-image: repeating-linear-gradient(135deg, transparent 0 34px, rgba(69, 103, 78, .025) 35px 36px);
+      padding: max(22px, env(safe-area-inset-top)) 18px max(26px, env(safe-area-inset-bottom));
+    }
+
+    button, input { font: inherit; }
+    button { touch-action: manipulation; cursor: pointer; }
+    .shell { width: min(100%, 680px); margin: 0 auto; }
+    .masthead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .kicker { color: var(--green); font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+    h1, h2, p { margin: 0; }
+    h1 { margin-top: 7px; font-family: "Noto Serif SC", "Songti SC", serif; font-size: 30px; font-weight: 600; }
+    .today-label { margin-top: 7px; color: var(--muted); font-size: 13px; }
+    .offline-mark { flex: none; padding: 7px 10px; border: 1px solid #d5e0d4; border-radius: 999px; color: var(--green); font-size: 11px; }
+
+    .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin: 25px 0 20px; padding: 5px; border: 1px solid #e1e7de; border-radius: 12px; background: rgba(255,255,255,.62); }
+    .tab { min-height: 42px; border: 0; border-radius: 8px; color: #64736a; background: transparent; font-size: 14px; }
+    .tab[aria-selected="true"] { color: var(--green-dark); background: white; box-shadow: 0 2px 9px rgba(37, 65, 48, .08); font-weight: 700; }
+    .view[hidden] { display: none; }
+    .section-label { color: var(--muted); font-size: 13px; }
+    .hero { padding: 26px; border: 1px solid #d8e3d8; border-radius: 16px; background: #e5eee4; }
+    .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .hero h2 { margin-top: 5px; color: var(--green-dark); font-family: "Noto Serif SC", "Songti SC", serif; font-size: 20px; font-weight: 600; }
+    .count { margin-top: 24px; color: var(--green-dark); font-size: 68px; font-weight: 650; letter-spacing: 0; line-height: 1; }
+    .count small { margin-left: 7px; font-size: 18px; font-weight: 400; }
+    .progress { height: 8px; margin-top: 23px; overflow: hidden; border-radius: 9px; background: #cfddcf; }
+    .progress-fill { width: 0; height: 100%; border-radius: inherit; background: var(--green); transition: width .2s ease; }
+    .progress-caption { display: flex; justify-content: space-between; gap: 10px; margin-top: 11px; color: #62736a; font-size: 12px; }
+
+    .debt-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 15px 2px 20px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+    .debt-line strong { color: var(--rust); font-size: 20px; }
+    .debt-copy { color: #62736a; font-size: 13px; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .button { display: inline-flex; min-height: 50px; align-items: center; justify-content: center; gap: 7px; padding: 0 16px; border: 1px solid transparent; border-radius: 10px; font-weight: 650; }
+    .button-primary { color: white; background: var(--green); }
+    .button-primary:active { background: var(--green-dark); }
+    .button-secondary { border-color: #d5e1d6; color: var(--green-dark); background: rgba(255,255,255,.72); }
+    .button-quiet { min-height: 42px; border-color: var(--line); color: #4f6257; background: white; font-size: 13px; }
+
+    .surface { margin-top: 18px; padding: 20px; border: 1px solid rgba(218, 227, 216, .9); border-radius: 12px; background: var(--surface); }
+    .surface h2 { margin-bottom: 15px; font-size: 15px; font-weight: 700; }
+    .entry-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; }
+    .field { width: 100%; min-height: 46px; padding: 0 13px; border: 1px solid #d6e0d6; border-radius: 9px; color: var(--ink); background: white; }
+    .field:focus { outline: 2px solid rgba(46,109,85,.22); border-color: var(--green); }
+    .makeup-button { color: #8d5034; background: #f4e9df; }
+    .helper { margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .voice-label { display: block; margin: 0 0 8px; color: #56675d; font-size: 12px; }
+    .voice-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; }
+    .voice-button { min-width: 116px; }
+    .voice-button[aria-pressed="true"] { background: #a85f3c; }
+    .voice-status { display: flex; align-items: center; gap: 8px; margin-top: 16px; color: #56675d; font-size: 12px; }
+    .voice-indicator { width: 8px; height: 8px; flex: none; border-radius: 50%; background: #a9b3aa; }
+    .voice-status[data-listening="true"] .voice-indicator { background: #b75a42; box-shadow: 0 0 0 4px rgba(183,90,66,.12); }
+    .voice-transcript { min-height: 44px; margin-top: 10px; padding: 11px 12px; border-radius: 8px; color: #52635a; background: #f2f5ef; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+    .voice-count { margin-top: 10px; color: var(--green-dark); font-size: 13px; }
+    .voice-count strong { font-size: 18px; }
+    .voice-privacy { margin-top: 12px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+
+    .periods { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 5px; border-radius: 10px; background: #e5eae2; }
+    .period { min-height: 40px; border: 0; border-radius: 7px; color: #657369; background: transparent; font-size: 13px; }
+    .period[aria-pressed="true"] { color: var(--green-dark); background: white; font-weight: 700; }
+    .date-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 16px 0; }
+    .date-row label { color: #56675d; font-size: 13px; }
+    .date-input { width: auto; min-height: 40px; padding: 0 10px; }
+    .summary { padding: 21px; border-radius: 13px; color: white; background: var(--green-dark); }
+    .summary .section-label { color: #d0dfd4; }
+    .summary-total { margin-top: 8px; font-size: 50px; font-weight: 650; line-height: 1.1; }
+    .summary-total small { margin-left: 5px; font-size: 15px; font-weight: 400; }
+    .summary-caption { margin-top: 11px; color: #d0dfd4; font-size: 12px; }
+    .list-head { display: flex; justify-content: space-between; margin: 23px 2px 8px; font-size: 14px; font-weight: 700; }
+    .list-head span:last-child { color: var(--muted); font-size: 12px; font-weight: 400; }
+    .day-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 68px; border-bottom: 1px solid var(--line); }
+    .day-date { font-size: 13px; }
+    .day-meta { margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .day-count { flex: none; color: var(--green-dark); font-size: 18px; font-weight: 700; }
+    .day-count small { color: var(--muted); font-size: 11px; font-weight: 400; }
+    .empty { padding: 35px 8px; color: var(--muted); text-align: center; font-size: 13px; }
+
+    .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .setting-row + .setting-row { margin-top: 17px; padding-top: 17px; border-top: 1px solid #e8ede7; }
+    .setting-title { font-size: 14px; font-weight: 650; }
+    .setting-subtitle { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .goal-editor { display: flex; align-items: center; gap: 9px; }
+    .goal-input { width: 100px; text-align: center; }
+    .unit { color: var(--muted); font-size: 12px; }
+    .switch { width: 44px; height: 26px; accent-color: var(--green); }
+    .setting-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 16px; }
+    .warning { margin-top: 14px; padding: 12px 13px; border-left: 3px solid #c18a56; border-radius: 0 7px 7px 0; color: #745a42; background: #f8f0e5; font-size: 12px; line-height: 1.65; }
+    .storage-warning { display: none; margin-top: 14px; color: #a14c35; font-size: 12px; line-height: 1.6; }
+    .toast { position: fixed; z-index: 3; right: 18px; bottom: max(24px, env(safe-area-inset-bottom)); left: 18px; width: fit-content; max-width: calc(100vw - 36px); margin: auto; padding: 12px 17px; border-radius: 9px; color: white; background: #233b30; box-shadow: 0 6px 24px rgba(28,48,36,.2); font-size: 13px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .18s ease, transform .18s ease; }
+    .toast.visible { opacity: 1; transform: translateY(0); }
+    .file-input { display: none; }
+
+    @media (min-width: 600px) {
+      body { padding-top: 38px; }
+      .hero { padding: 34px; }
+      .count { font-size: 78px; }
+    }
+    @media (max-width: 390px) {
+      body { padding-right: 14px; padding-left: 14px; }
+      .hero { padding: 21px; }
+      .entry-row { grid-template-columns: minmax(0, 1fr) auto; }
+      .entry-row .makeup-button { grid-column: 1 / -1; }
+      .goal-editor { gap: 6px; }
+      .goal-input { width: 82px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div>
+        <div class="kicker">每日修持 · 慢慢积累</div>
+        <h1>念经积累</h1>
+        <p class="today-label" id="header-date"></p>
+      </div>
+      <span class="offline-mark">本机记录</span>
+    </header>
+
+    <nav class="tabs" aria-label="主导航">
+      <button class="tab" type="button" data-view="home" aria-selected="true">记数</button>
+      <button class="tab" type="button" data-view="stats" aria-selected="false">统计</button>
+      <button class="tab" type="button" data-view="settings" aria-selected="false">设置</button>
+    </nav>
+
+    <section class="view" id="view-home">
+      <div class="hero">
+        <div class="hero-top">
+          <div><p class="section-label">今天的记录</p><h2>今天，慢慢来</h2></div>
+          <span class="section-label" id="home-date"></span>
+        </div>
+        <div class="count"><span id="today-count">0</span><small>次</small></div>
+        <div class="progress" aria-label="目标进度"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-caption"><span id="goal-caption"></span><span id="remaining-caption"></span></div>
+      </div>
+
+      <div class="debt-line">
+        <div class="debt-copy">历史待补念<br><span class="section-label">补念会优先抵扣较早日期欠数</span></div>
+        <strong><span id="debt-count">0</span> 次</strong>
+      </div>
+
+      <div class="actions">
+        <button class="button button-primary" type="button" data-add="1">＋ 记 1 次</button>
+        <button class="button button-secondary" type="button" data-add="10">＋ 记 10 次</button>
+      </div>
+
+      <div class="surface">
+        <h2>自定义登记</h2>
+        <div class="entry-row">
+          <input class="field" id="custom-count" type="number" min="1" max="999999" step="1" inputmode="numeric" placeholder="输入次数" aria-label="输入次数">
+          <button class="button button-secondary" id="add-custom" type="button">记入今天</button>
+          <button class="button makeup-button" id="add-makeup" type="button">补念</button>
+        </div>
+        <p class="helper">补念次数也会计入今天的实际总数，并用于抵扣之前未完成的目标。</p>
+      </div>
+
+      <div class="surface">
+        <h2>麦克风语音计数</h2>
+        <label class="voice-label" for="voice-phrase">要计数的词语或短句</label>
+        <div class="voice-controls">
+          <input class="field" id="voice-phrase" type="text" maxlength="30" autocomplete="off" placeholder="例如：南无阿弥陀佛" aria-label="要计数的词语或短句">
+          <button class="button button-primary voice-button" id="voice-toggle" type="button" aria-pressed="false">开始识别</button>
+        </div>
+        <div class="voice-status" id="voice-status" data-listening="false" aria-live="polite"><span class="voice-indicator"></span><span id="voice-status-text">尚未开始</span></div>
+        <div class="voice-transcript" id="voice-transcript" aria-live="polite">识别到的语句会显示在这里</div>
+        <p class="voice-count">本次已识别并计入 <strong id="voice-session-count">0</strong> 次</p>
+        <p class="voice-privacy">只统计完整识别出的目标短句，不保存录音。浏览器语音识别可能使用系统或浏览器的在线识别服务；需允许麦克风，局域网 HTTP 下可能被浏览器拦截。</p>
+      </div>
+    </section>
+
+    <section class="view" id="view-stats" hidden>
+      <div class="periods" role="group" aria-label="统计周期">
+        <button class="period" type="button" data-period="day" aria-pressed="true">日</button>
+        <button class="period" type="button" data-period="week" aria-pressed="false">周</button>
+        <button class="period" type="button" data-period="month" aria-pressed="false">月</button>
+        <button class="period" type="button" data-period="year" aria-pressed="false">年</button>
+      </div>
+      <div class="date-row">
+        <label for="stats-date">选择日期</label>
+        <input class="field date-input" id="stats-date" type="date">
+      </div>
+      <div class="summary">
+        <p class="section-label" id="summary-period"></p>
+        <div class="summary-total"><span id="period-total">0</span><small>次</small></div>
+        <p class="summary-caption">全部记录均按实际登记日期统计</p>
+      </div>
+      <div class="list-head"><span>每日明细</span><span id="day-count-label">0 天</span></div>
+      <div id="day-list"></div>
+    </section>
+
+    <section class="view" id="view-settings" hidden>
+      <div class="surface">
+        <h2>每日目标</h2>
+        <div class="setting-row">
+          <div><p class="setting-title">目标次数</p><p class="setting-subtitle">用于计算当天还差多少</p></div>
+          <div class="goal-editor"><input class="field goal-input" id="daily-goal" type="number" min="1" max="999999" step="1" inputmode="numeric"><span class="unit">次 / 天</span></div>
+        </div>
+        <button class="button button-primary" id="save-goal" type="button" style="width:100%;margin-top:16px">保存目标</button>
+      </div>
+
+      <div class="surface">
+        <div class="setting-row">
+          <div><p class="setting-title">中午进度提示</p><p class="setting-subtitle">当天中午后打开页面时提示差额</p></div>
+          <input class="switch" id="reminder-enabled" type="checkbox" aria-label="开启中午进度提示">
+        </div>
+        <p class="warning">这是本地页面提示。页面关闭时无法定时运行或主动发送通知；需打开页面后才会检查。</p>
+      </div>
+
+      <div class="surface">
+        <h2>本机数据</h2>
+        <p class="helper" style="margin-top:0">数据只保存在当前浏览器。换浏览器、清理浏览数据或更换手机前，请先导出备份。</p>
+        <div class="setting-actions">
+          <button class="button button-quiet" id="export-data" type="button">导出备份</button>
+          <button class="button button-quiet" id="import-data" type="button">导入备份</button>
+        </div>
+        <input class="file-input" id="backup-file" type="file" accept="application/json,.json">
+        <p class="storage-warning" id="storage-warning">此浏览器未允许本地存储，关闭页面后记录可能无法保留。请改用手机浏览器打开，并导出备份。</p>
+      </div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const DATA_KEY = 'recitation.offline.data.v1';
+      const DEFAULTS = { dailyGoal: 108, reminderEnabled: false, startDate: '' };
+      const today = dateKey(new Date());
+      let activePeriod = 'day';
+      let toastTimer;
+      let storageAvailable = true;
+      let state = loadState();
+
+      function dateKey(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function parseDate(key) {
+        const [year, month, day] = key.split('-').map(Number);
+        return new Date(year, month - 1, day, 12);
+      }
+
+      function loadState() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(DATA_KEY) || '{}');
+          return {
+            records: saved.records && typeof saved.records === 'object' ? saved.records : {},
+            settings: { ...DEFAULTS, ...(saved.settings || {}) }
+          };
+        } catch (error) {
+          storageAvailable = false;
+          return { records: {}, settings: { ...DEFAULTS } };
+        }
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(DATA_KEY, JSON.stringify(state));
+          storageAvailable = true;
+        } catch (error) {
+          storageAvailable = false;
+        }
+        document.getElementById('storage-warning').style.display = storageAvailable ? 'none' : 'block';
+      }
+
+      function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('visible'), 2300);
+      }
+
+      function getRecord(date) {
+        return state.records[date] || { count: 0, makeupCount: 0, goal: state.settings.dailyGoal };
+      }
+
+      function addCount(amount, isMakeup = false) {
+        const record = getRecord(today);
+        record.count += amount;
+        if (isMakeup) record.makeupCount += amount;
+        state.records[today] = record;
+        saveState();
+        render();
+        showToast(isMakeup ? `已登记补念 ${amount} 次` : `已记入 ${amount} 次`);
+      }
+
+      function dayRange(start, end) {
+        const result = [];
+        const cursor = parseDate(start);
+        const last = parseDate(end);
+        while (cursor <= last) {
+          result.push(dateKey(cursor));
+          cursor.setDate(cursor.getDate() + 1);
+        }
+        return result;
+      }
+
+      function calculateDebt() {
+        const dates = Object.keys(state.records).sort();
+        const start = state.settings.startDate || dates[0] || today;
+        const outstanding = [];
+        for (const date of dayRange(start, today)) {
+          const record = getRecord(date);
+          let makeup = record.makeupCount || 0;
+          for (const debt of outstanding) {
+            const applied = Math.min(debt.remaining, makeup);
+            debt.remaining -= applied;
+            makeup -= applied;
+            if (makeup === 0) break;
+          }
+          if (date < today) {
+            const goal = record.goal || state.settings.dailyGoal;
+            const deficit = Math.max(0, goal - (record.count || 0));
+            if (deficit > 0) outstanding.push({ remaining: deficit });
+          }
+        }
+        return outstanding.reduce((sum, debt) => sum + debt.remaining, 0);
+      }
+
+      function renderHome() {
+        const record = getRecord(today);
+        const goal = state.settings.dailyGoal;
+        const remaining = Math.max(0, goal - record.count);
+        document.getElementById('today-count').textContent = record.count;
+        document.getElementById('goal-caption').textContent = `每日目标 ${goal} 次`;
+        document.getElementById('remaining-caption').textContent = remaining ? `还差 ${remaining} 次` : '今日目标已完成';
+        document.getElementById('progress-fill').style.width = `${Math.min(100, Math.round(record.count / goal * 100))}%`;
+        document.getElementById('debt-count').textContent = calculateDebt();
+      }
+
+      function periodRange(mode, selected) {
+        const date = parseDate(selected);
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        if (mode === 'day') return [selected, selected];
+        if (mode === 'week') {
+          const start = new Date(date);
+          start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+          const end = new Date(start);
+          end.setDate(end.getDate() + 6);
+          return [dateKey(start), dateKey(end)];
+        }
+        if (mode === 'month') return [dateKey(new Date(year, month, 1, 12)), dateKey(new Date(year, month + 1, 0, 12))];
+        return [`${year}-01-01`, `${year}-12-31`];
+      }
+
+      function renderStats() {
+        const selected = document.getElementById('stats-date').value || today;
+        const [start, end] = periodRange(activePeriod, selected);
+        const lastDate = end > today ? today : end;
+        const dates = start <= lastDate ? dayRange(start, lastDate) : [];
+        const total = dates.reduce((sum, date) => sum + (getRecord(date).count || 0), 0);
+        const names = { day: '当日', week: '本周', month: '本月', year: '本年' };
+        const label = activePeriod === 'day' ? start : activePeriod === 'week' ? `${start} 至 ${end}` : activePeriod === 'month' ? start.slice(0, 7) : start.slice(0, 4);
+        document.getElementById('summary-period').textContent = `${names[activePeriod]}累计 · ${label}`;
+        document.getElementById('period-total').textContent = total;
+        document.getElementById('day-count-label').textContent = `${dates.length} 天`;
+        const list = document.getElementById('day-list');
+        if (!dates.length) {
+          list.innerHTML = '<div class="empty">这个时段还没有记录</div>';
+          return;
+        }
+        list.innerHTML = dates.reverse().map((date) => {
+          const record = getRecord(date);
+          const makeup = record.makeupCount ? ` · 补念 ${record.makeupCount} 次` : '';
+          return `<div class="day-row"><div><div class="day-date">${date}</div><div class="day-meta">目标 ${record.goal || state.settings.dailyGoal} 次${makeup}</div></div><div class="day-count">${record.count || 0}<small> 次</small></div></div>`;
+        }).join('');
+      }
+
+      function renderSettings() {
+        document.getElementById('daily-goal').value = state.settings.dailyGoal;
+        document.getElementById('reminder-enabled').checked = state.settings.reminderEnabled;
+        document.getElementById('storage-warning').style.display = storageAvailable ? 'none' : 'block';
+      }
+
+      function render() {
+        document.getElementById('header-date').textContent = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'full' }).format(new Date());
+        document.getElementById('home-date').textContent = today;
+        renderHome();
+        renderStats();
+        renderSettings();
+      }
+
+      function validateAmount(value) {
+        const amount = Number(value);
+        if (!Number.isInteger(amount) || amount < 1 || amount > 999999) {
+          showToast('请输入 1 至 999999 的整数');
+          return null;
+        }
+        return amount;
+      }
+
+      function normalizeSpeech(text) {
+        return text.toLocaleLowerCase().replace(/[\s，。！？、；：,.!?;:…~"'“”‘’（）()【】\[\]《》]/g, '');
+      }
+
+      function countPhraseOccurrences(transcript, phrase) {
+        const text = normalizeSpeech(transcript);
+        const target = normalizeSpeech(phrase);
+        if (!target) return 0;
+        let count = 0;
+        let position = 0;
+        while ((position = text.indexOf(target, position)) !== -1) {
+          count += 1;
+          position += target.length;
+        }
+        return count;
+      }
+
+      let recognition = null;
+      let listening = false;
+      let lastHandledResult = 0;
+      let voiceRestartTimer = null;
+      let voiceSessionCount = 0;
+
+      function setVoiceStatus(message, active = listening) {
+        document.getElementById('voice-status-text').textContent = message;
+        document.getElementById('voice-status').dataset.listening = String(active);
+        document.getElementById('voice-toggle').setAttribute('aria-pressed', String(active));
+        document.getElementById('voice-toggle').textContent = active ? '停止识别' : '开始识别';
+      }
+
+      function stopVoiceRecognition() {
+        listening = false;
+        clearTimeout(voiceRestartTimer);
+        if (recognition) {
+          try { recognition.stop(); } catch (error) { setVoiceStatus('已停止', false); }
+        } else {
+          setVoiceStatus('已停止', false);
+        }
+      }
+
+      function startVoiceRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          setVoiceStatus('此浏览器不支持语音识别，请换用支持语音识别的浏览器', false);
+          return;
+        }
+
+        const phrase = document.getElementById('voice-phrase').value.trim();
+        if (!normalizeSpeech(phrase)) {
+          showToast('请先填写要计数的短句');
+          document.getElementById('voice-phrase').focus();
+          return;
+        }
+
+        state.settings.voicePhrase = phrase;
+        saveState();
+        voiceSessionCount = 0;
+        lastHandledResult = 0;
+        document.getElementById('voice-session-count').textContent = '0';
+        document.getElementById('voice-transcript').textContent = '正在等待语音…';
+
+        try {
+          recognition = new SpeechRecognition();
+          recognition.lang = 'zh-CN';
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.maxAlternatives = 1;
+          recognition.onresult = (event) => {
+            let latestTranscript = '';
+            for (let index = event.resultIndex; index < event.results.length; index += 1) {
+              const result = event.results[index];
+              latestTranscript += result[0].transcript;
+              if (!result.isFinal || index < lastHandledResult) continue;
+              lastHandledResult = index + 1;
+              const occurrences = countPhraseOccurrences(result[0].transcript, phrase);
+              if (occurrences > 0) {
+                voiceSessionCount += occurrences;
+                document.getElementById('voice-session-count').textContent = voiceSessionCount;
+                addCount(occurrences);
+              }
+            }
+            if (latestTranscript) document.getElementById('voice-transcript').textContent = latestTranscript;
+          };
+          recognition.onerror = (event) => {
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+              listening = false;
+              setVoiceStatus('麦克风或语音识别权限未允许', false);
+            } else if (event.error === 'no-speech') {
+              setVoiceStatus('没有听清，继续聆听…', true);
+            } else if (event.error !== 'aborted') {
+              listening = false;
+              setVoiceStatus(`识别暂不可用：${event.error}`, false);
+            }
+          };
+          recognition.onend = () => {
+            if (listening) {
+              voiceRestartTimer = setTimeout(() => {
+                if (!listening) return;
+                try { recognition.start(); } catch (error) {
+                  listening = false;
+                  setVoiceStatus('识别已暂停，请重新开始', false);
+                }
+              }, 250);
+            } else {
+              setVoiceStatus('已停止', false);
+            }
+          };
+          listening = true;
+          setVoiceStatus('正在聆听…', true);
+          recognition.start();
+        } catch (error) {
+          listening = false;
+          setVoiceStatus('无法启动麦克风，请检查浏览器权限', false);
+        }
+      }
+
+      function exportBackup() {
+        const blob = new Blob([JSON.stringify({ version: 1, ...state }, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `念经积累备份-${today}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast('备份文件已生成');
+      }
+
+      function importBackup(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const data = JSON.parse(reader.result);
+            if (!data || !data.records || typeof data.records !== 'object' || !data.settings || typeof data.settings !== 'object') throw new Error('invalid backup');
+            state = { records: data.records, settings: { ...DEFAULTS, ...data.settings } };
+            saveState();
+            render();
+            showToast('备份已导入');
+          } catch (error) {
+            showToast('备份文件无效，未导入');
+          }
+          document.getElementById('backup-file').value = '';
+        };
+        reader.readAsText(file);
+      }
+
+      document.querySelectorAll('[data-view]').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('[data-view]').forEach((item) => item.setAttribute('aria-selected', String(item === button)));
+          document.querySelectorAll('.view').forEach((view) => { view.hidden = view.id !== `view-${button.dataset.view}`; });
+        });
+      });
+      document.querySelectorAll('[data-add]').forEach((button) => button.addEventListener('click', () => addCount(Number(button.dataset.add))));
+      document.getElementById('add-custom').addEventListener('click', () => {
+        const amount = validateAmount(document.getElementById('custom-count').value);
+        if (amount !== null) {
+          addCount(amount);
+          document.getElementById('custom-count').value = '';
+        }
+      });
+      document.getElementById('add-makeup').addEventListener('click', () => {
+        const amount = validateAmount(document.getElementById('custom-count').value);
+        if (amount !== null) {
+          addCount(amount, true);
+          document.getElementById('custom-count').value = '';
+        }
+      });
+      document.getElementById('voice-phrase').value = state.settings.voicePhrase || '';
+      document.getElementById('voice-phrase').addEventListener('change', (event) => {
+        state.settings.voicePhrase = event.target.value.trim();
+        saveState();
+      });
+      document.getElementById('voice-toggle').addEventListener('click', () => {
+        if (listening) stopVoiceRecognition();
+        else startVoiceRecognition();
+      });
+      document.querySelectorAll('[data-period]').forEach((button) => {
+        button.addEventListener('click', () => {
+          activePeriod = button.dataset.period;
+          document.querySelectorAll('[data-period]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+          renderStats();
+        });
+      });
+      document.getElementById('stats-date').addEventListener('change', renderStats);
+      document.getElementById('save-goal').addEventListener('click', () => {
+        const goal = validateAmount(document.getElementById('daily-goal').value);
+        if (goal !== null) {
+          state.settings.dailyGoal = goal;
+          saveState();
+          render();
+          showToast('每日目标已保存');
+        }
+      });
+      document.getElementById('reminder-enabled').addEventListener('change', (event) => {
+        state.settings.reminderEnabled = event.target.checked;
+        saveState();
+        if (event.target.checked) showToast('页面在中午后打开时会提示差额');
+      });
+      document.getElementById('export-data').addEventListener('click', exportBackup);
+      document.getElementById('import-data').addEventListener('click', () => document.getElementById('backup-file').click());
+      document.getElementById('backup-file').addEventListener('change', (event) => {
+        if (event.target.files && event.target.files[0]) importBackup(event.target.files[0]);
+      });
+
+      document.getElementById('stats-date').max = today;
+      document.getElementById('stats-date').value = today;
+      if (!state.settings.startDate) {
+        state.settings.startDate = today;
+        saveState();
+      }
+      render();
+      const promptedDate = localStorage.getItem('recitation.offline.promptedDate');
+      const currentHour = new Date().getHours();
+      const remaining = Math.max(0, state.settings.dailyGoal - getRecord(today).count);
+      if (state.settings.reminderEnabled && currentHour >= 12 && promptedDate !== today && remaining > 0) {
+        try { localStorage.setItem('recitation.offline.promptedDate', today); } catch (error) { /* Local reminder state is optional. */ }
+        showToast(`今天还差 ${remaining} 次`);
+      }
+
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      }
+
+      window.addEventListener('pagehide', stopVoiceRecognition);
+    })();
+  </script>
+</body>
+</html>
