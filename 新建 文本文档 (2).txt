@@ -1,0 +1,18 @@
+{
+  "name": "念经积累",
+  "short_name": "念经积累",
+  "lang": "zh-CN",
+  "start_url": "./offline.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f4ed",
+  "theme_color": "#f2f4ed",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
