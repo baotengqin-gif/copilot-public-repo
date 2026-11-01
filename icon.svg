@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">念经积累 图标</title>
+  <desc id="desc">一枚简洁的佛教风格纪念图标，代表默念、净心和持续积累。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f5f7f0"/>
+      <stop offset="100%" stop-color="#e2ece2"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#2f6f58"/>
+      <stop offset="100%" stop-color="#1d4b3c"/>
+    </linearGradient>
+    <linearGradient id="petal" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f7f1df"/>
+      <stop offset="100%" stop-color="#e5d7ae"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#203b33" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="40" fill="url(#bg)"/>
+
+  <circle cx="256" cy="256" r="190" fill="none" stroke="url(#ring)" stroke-width="18" opacity="0.95"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#dfe9df" stroke-width="2"/>
+
+  <g filter="url(#shadow)">
+    <g transform="translate(256 256)">
+      <g fill="url(#petal)" opacity="0.96">
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(0)"/>
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(30)"/>
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(60)"/>
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(90)"/>
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(120)"/>
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(150)"/>
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(180)"/>
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(210)"/>
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(240)"/>
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(270)"/>
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(300)"/>
+        <ellipse cx="0" cy="-126" rx="44" ry="74" transform="rotate(330)"/>
+      </g>
+
+      <circle cx="0" cy="0" r="62" fill="#f5efdc" stroke="#2e6d55" stroke-width="8"/>
+      <circle cx="0" cy="0" r="26" fill="#2e6d55"/>
+
+      <path d="M0,-118 C32,-70 42,-32 42,8 C42,54 20,88 0,126 C-20,88 -42,54 -42,8 C-42,-32 -32,-70 0,-118Z" fill="#d9b16a" opacity="0.25"/>
+      <path d="M0,-88 Q50,-44 50,8 Q50,44 0,88 Q-50,44 -50,8 Q-50,-44 0,-88Z" fill="none" stroke="#9a7d52" stroke-width="5" opacity="0.5"/>
+    </g>
+  </g>
+
+  <g opacity="0.9">
+    <path d="M256 96 L275 146 L325 156 L286 189 L295 241 L256 214 L217 241 L226 189 L187 156 L237 146 Z" fill="#c89d4a" opacity="0.72"/>
+  </g>
+
+  <g fill="none" stroke="#2f6f58" stroke-width="5" opacity="0.9">
+    <path d="M256 120v34"/>
+    <path d="M170 170l24 24"/>
+    <path d="M342 170l-24 24"/>
+    <path d="M176 342l23-22"/>
+    <path d="M336 342l-23-22"/>
+    <path d="M256 384v-34"/>
+  </g>
+</svg>
